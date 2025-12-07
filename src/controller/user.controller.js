@@ -2,6 +2,7 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/apiError.js";
 import {User} from "../models/users.models.js";
 import {ApiResponses} from "../utils/apiResponses.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const registerUser = asyncHandler(async (req, res)=>{
         // res.status(200).json({
@@ -27,28 +28,37 @@ const registerUser = asyncHandler(async (req, res)=>{
                 throw new ApiError(409, "Username or email already exists");
         }
 
-        
+          const avatarLocalPath = req.files?.avatar[0]?.path;
+          const coverImageLocalPath = req.files?.coverImage[0]?.path;    //error
+          
+console.log("Uploaded :", avatarLocalPath, coverImageLocalPath);
 
-        const avatarlocalPath = req.files?.avatar?.[0]?.path;
-        const coverImagePath = req.files?.coverImage?.[0]?.path;
-        if(!avatarlocalPath){
+        if(!avatarLocalPath){
                 throw new ApiError(400, "Avtar image is required");
         }
 
-        
+        const avatar = await uploadOnCloudinary(avatarLocalPath)
+        const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
+        console.log("Uploaded Files:", avatar, coverImage);
+
+    if (!avatar) {
+        throw new ApiError(400, "Avatar file is required")
+    }
+
+    
         const user = await User.create(
                 {
                    fullname,
-                   avatar: avatarlocalPath,
-                   coverImage: coverImagePath||"",
+                   avatar: avatar.url,
+                   coverImage: coverImage?.url||"",
                    email,
                    username: username.toLowerCase(),
                    password
                 }
         )
 
-        const createdUser = await findbyId(user._id).select("-password -refreshTokens");
+        const createdUser = await User.findById(user._id).select("-password -refreshTokens");
 
         if(!createdUser){
                 throw new ApiError(500, "User registration failed");
