@@ -41,7 +41,7 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
-    refereshToken:{
+    refreshToken:{
         type: String
     }   
 },{timestamps: true});
@@ -81,7 +81,7 @@ userSchema.methods.generateRefreshToken = function(){
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expriresIn: process.env.REFRESH_TOKEN_EXPIRE
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRE
         }
     )
 }
