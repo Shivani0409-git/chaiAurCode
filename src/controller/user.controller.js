@@ -12,8 +12,6 @@ const generateAccessAndRefreshToken = async(userId)=> {
                 const accessToken = user.generateAccessToken()
                 const refreshToken = user.generateRefreshToken()
 
-                console.log("Generated Tokens:", {accessToken, refreshToken});
-
                 user.refreshToken = refreshToken
 
                 await user.save({validateBeforeSave: false})
@@ -21,7 +19,7 @@ const generateAccessAndRefreshToken = async(userId)=> {
                 return {accessToken, refreshToken};
 
         } catch (error) {
-                throw new ApiError(500, "Something went wrong while generating tokens***");
+                throw new ApiError(500, "Something went wrong while generating tokens");
         }
 }
 
@@ -156,25 +154,40 @@ const loginUser = asyncHandler(async (req, res)=>{
         return res.status(200)
                 .cookie("accessToken", accessToken, options)
                 .cookie("refreshToken", refreshToken, options)
-                .json( new ApiResponses(200, "User logged in successfully", loggedInUser) )
+                .json( 
+                        new ApiResponses(
+                                200, 
+                                { user: loggedInUser, accessToken, refreshToken},
+                                "User logged In Successfully"
+                        ) 
+                )
 
 })
 
 const logoutUser = asyncHandler(async (req, res)=>{
         // remove cookies and tokens from db
-        const user = await User.findByIdAndUpdate(req.user._id, {
-                $set: {refreshToken: undefined }  // $set: {refreshTokens: []}
-        }, {new: true})
+        await User.findByIdAndUpdate(
+                req.user._id, 
+                {
+                    $set: {
+                       refreshToken: undefined // this removes the field from document
+                      }
+                },
+                {
+                        new: true
+                }
+        )
 
         const options = {
                 httpOnly: true,
                 secure: true
         }
 
-        return res.status(200)
-                .clearCookie("accessToken", accessToken, options)
-                .clearCookie("refreshToken", refreshToken, options)
-                .json( new ApiResponses(200, {}, "User logOut successfully") )
+        return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json( new ApiResponses(200, {}, "User logOut successfully") )
 
 })
 
