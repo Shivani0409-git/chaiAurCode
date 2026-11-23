@@ -250,13 +250,13 @@ const changeCurrentPassword = asyncHandler(async(req,res) => {
 
         return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Password changed successfully"))
+        .json(new ApiResponses(200, {}, "Password changed successfully"))
 })
 
 const getCurrentUser = asyncHandler(async(req, res)=> {
         return res
         .status(200)
-        .json(200, req.user, "current user fetched successfully ")
+        .json(new ApiResponses(200, req.user, "current user fetched successfully "))
 })
 
 const updateAccountDetails= asyncHandler(async(req,res)=>{
@@ -266,7 +266,7 @@ const updateAccountDetails= asyncHandler(async(req,res)=>{
                 throw new ApiError(400, "All fields are require")
         }
 
-        const user = User.findByIdAndUpdate(
+        const user = await User.findByIdAndUpdate(
                 req.user?._id,
                 {
                         $set:{
@@ -307,7 +307,7 @@ const updateUserAvatar = asyncHandler(async(req, res)=>{
         return res
         .status(200)
         .json(
-                new ApiResponses(200, user, "Cover image updated successfully")
+                new ApiResponses(200, user, "Avatar image updated successfully")
         )
 })
 
